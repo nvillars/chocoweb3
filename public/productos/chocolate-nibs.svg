@@ -1,0 +1,63 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="chocolateGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2E1A0E;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3E2723;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2E1A0E;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="nibsGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#654321;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B4513;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Fondo circular -->
+  <circle cx="150" cy="150" r="140" fill="url(#chocolateGradient3)" stroke="#654321" stroke-width="3"/>
+  
+  <!-- Barra de chocolate principal -->
+  <rect x="80" y="100" width="140" height="100" rx="8" fill="#1A0F0A" stroke="#654321" stroke-width="2"/>
+  
+  <!-- Divisiones de la barra -->
+  <line x1="120" y1="100" x2="120" y2="200" stroke="#654321" stroke-width="1"/>
+  <line x1="160" y1="100" x2="160" y2="200" stroke="#654321" stroke-width="1"/>
+  <line x1="200" y1="100" x2="200" y2="200" stroke="#654321" stroke-width="1"/>
+  <line x1="80" y1="130" x2="220" y2="130" stroke="#654321" stroke-width="1"/>
+  <line x1="80" y1="160" x2="220" y2="160" stroke="#654321" stroke-width="1"/>
+  <line x1="80" y1="190" x2="220" y2="190" stroke="#654321" stroke-width="1"/>
+  
+  <!-- Nibs de cacao (trozos irregulares) -->
+  <polygon points="95,115 100,110 105,115 103,120 98,118" fill="url(#nibsGradient)"/>
+  <polygon points="135,125 140,120 145,125 143,130 138,128" fill="url(#nibsGradient)"/>
+  <polygon points="175,135 180,130 185,135 183,140 178,138" fill="url(#nibsGradient)"/>
+  <polygon points="105,155 110,150 115,155 113,160 108,158" fill="url(#nibsGradient)"/>
+  <polygon points="145,165 150,160 155,165 153,170 148,168" fill="url(#nibsGradient)"/>
+  <polygon points="185,175 190,170 195,175 193,180 188,178" fill="url(#nibsGradient)"/>
+  
+  <!-- Más nibs pequeños -->
+  <circle cx="115" cy="140" r="2" fill="url(#nibsGradient)"/>
+  <circle cx="155" cy="150" r="1.5" fill="url(#nibsGradient)"/>
+  <circle cx="195" cy="160" r="2.5" fill="url(#nibsGradient)"/>
+  <circle cx="125" cy="180" r="1.8" fill="url(#nibsGradient)"/>
+  <circle cx="165" cy="190" r="2.2" fill="url(#nibsGradient)"/>
+  
+  <!-- Texto "NIBS" -->
+  <text x="150" y="210" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#8B4513">NIBS</text>
+  
+  <!-- Nibs decorativos alrededor -->
+  <polygon points="50,70 55,65 60,70 58,75 53,73" fill="url(#nibsGradient)"/>
+  <polygon points="250,70 255,65 260,70 258,75 253,73" fill="url(#nibsGradient)"/>
+  <polygon points="50,230 55,225 60,230 58,235 53,233" fill="url(#nibsGradient)"/>
+  <polygon points="250,230 255,225 260,230 258,235 253,233" fill="url(#nibsGradient)"/>
+  
+  <!-- Brillo en la barra -->
+  <rect x="85" y="105" width="130" height="20" rx="3" fill="#3E2723" opacity="0.6"/>
+  
+  <!-- Efecto de textura crujiente -->
+  <circle cx="100" cy="120" r="0.5" fill="#654321" opacity="0.8"/>
+  <circle cx="140" cy="130" r="0.5" fill="#654321" opacity="0.8"/>
+  <circle cx="180" cy="140" r="0.5" fill="#654321" opacity="0.8"/>
+  <circle cx="110" cy="160" r="0.5" fill="#654321" opacity="0.8"/>
+  <circle cx="150" cy="170" r="0.5" fill="#654321" opacity="0.8"/>
+  <circle cx="190" cy="180" r="0.5" fill="#654321" opacity="0.8"/>
+</svg>
+

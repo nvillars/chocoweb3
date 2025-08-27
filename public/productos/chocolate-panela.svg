@@ -1,0 +1,9 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" rx="20" fill="#8B4513"/>
+  <rect x="20" y="20" width="160" height="160" rx="15" fill="#D2691E"/>
+  <rect x="30" y="30" width="140" height="140" rx="10" fill="#CD853F"/>
+  <circle cx="100" cy="100" r="40" fill="#8B4513"/>
+  <circle cx="100" cy="100" r="30" fill="#D2691E"/>
+  <circle cx="100" cy="100" r="20" fill="#CD853F"/>
+  <text x="100" y="110" text-anchor="middle" fill="#8B4513" font-family="Arial" font-size="12" font-weight="bold">PANELA</text>
+</svg>

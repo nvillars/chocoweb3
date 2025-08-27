@@ -1,0 +1,58 @@
+name: Smoke tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:5.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongo --eval 'db.adminCommand(\"ping\")'" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next app
+        env:
+          MONGODB_URI: mongodb://localhost:27017/chocoweb-test
+        run: npm run build
+
+      - name: Start Next server
+        env:
+          NODE_ENV: production
+          MONGODB_URI: mongodb://localhost:27017/chocoweb-test
+        run: |
+          nohup npm run start > server.log 2>&1 &
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Run smoke test
+        env:
+          MONGODB_URI: mongodb://localhost:27017/chocoweb-test
+          BASE_URL: http://localhost:3000
+        run: npx tsx scripts/smoke-test.ts
+
+      - name: Upload server log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log
+          path: server.log
