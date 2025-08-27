@@ -1,0 +1,23 @@
+/* Typography matching the hero title for visual consistency */
+.title {
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  margin: 0 0 0.6rem 0;
+  font-weight: 600; /* softened from 800 for less visual weight */
+  color: #6B3A1E; /* a slightly warmer brown to match hero CTA */
+  letter-spacing: 0.005em;
+  line-height: 1.06;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.06);
+  transition: color 180ms ease, transform 180ms ease;
+  text-transform: none; /* keep normal case for readability */
+  font-family: inherit; /* use page/hero family for cohesion */
+}
+
+/* apply the chosen heading font */
+.title {
+  font-family: var(--heading-font);
+}
+
+.subtitle {
+  color: #6b4a2f;
+  margin-top: 0.5rem;
+}

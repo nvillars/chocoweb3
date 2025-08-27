@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+/* ===== Design Tokens ===== */
+:root {
+  --bg: #FAF6F1;
+  --bg-elevated: #FFFFFF;
+  --fg: #2A211B;
+
+  --brand-700: #5A3825; /* cacao intenso */
+  --brand-500: #7B4A2E; /* cacao medio */
+  --brand-300: #B78563; /* cacao claro */
+  --gold: #C4A062;
+  --mint: #A8D5BA;
+  --error: #B00020;
+
+  --radius: 14px;
+
+  --shadow-1: 0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.06);
+  --shadow-2: 0 8px 24px rgba(0,0,0,.10);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161312;
+    --bg-elevated: #1F1A18;
+    --fg: #F2EDE9;
+    --brand-700: #D5B08A;
+    --brand-500: #E6C8A5;
+    --brand-300: #F0DABD;
+    --gold: #E8C987;
+    --mint: #7CC4A4;
+    --error: #FFB3B3;
+    --shadow-1: 0 1px 2px rgba(0,0,0,.4), 0 2px 8px rgba(0,0,0,.5);
+    --shadow-2: 0 8px 24px rgba(0,0,0,.6);
+  }
+}
+
+/* ===== Base ===== */
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-inter, 'Inter'), system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1,h2,h3,.display {
+  font-family: var(--font-playfair, 'Playfair Display'), ui-serif, Georgia, 'Times New Roman', serif;
+  letter-spacing: .2px;
+}
+
+a { text-underline-offset: 3px; }
+
+/* ===== Primitivos UI ===== */
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+  padding:.75rem 1rem; border-radius: var(--radius);
+  transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease, color .2s ease;
+  font-weight:600;
+}
+.btn:active { transform: scale(.98); }
+.btn-primary {
+  background: var(--brand-700); color: #fff; box-shadow: var(--shadow-1);
+}
+.btn-primary:hover { background: var(--brand-500); box-shadow: var(--shadow-2); }
+.btn-outline {
+  background: transparent; color: var(--brand-700); border:1px solid color-mix(in oklab, var(--gold) 40%, transparent);
+}
+.card {
+  background: var(--bg-elevated); border-radius: var(--radius); box-shadow: var(--shadow-1);
+}
+.card:hover { box-shadow: var(--shadow-2); }
+
+/* Safe area for notch */
+@supports(padding:max(0px)) {
+  .safe { padding-left: max(1.5rem, env(safe-area-inset-left)); padding-right:max(1.5rem, env(safe-area-inset-right)); }
+}
+
+/* Accessibility */
+.sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+:focus { outline: none; }
+:focus-visible { box-shadow: 0 0 0 4px rgba(196,160,98,0.18); border-radius: 8px; }
+
+/* helpers */
+.form-input { width: 100%; padding: 0.75rem; border-radius: 10px; border: 1px solid rgba(16,24,40,0.06); background: var(--bg-elevated); color: var(--fg); }
+.form-input:focus { box-shadow: 0 6px 18px rgba(16,24,40,0.06); }
+
+.badge { display:inline-flex; align-items:center; justify-content:center; padding:0.25rem 0.5rem; border-radius:999px; font-weight:700; font-size:0.75rem; }
+
+.container { max-width: 1120px; margin: 0 auto; padding-left: 1.5rem; padding-right: 1.5rem; }
+
+/* Product card specifics (used by ProductCard.tsx) */
+.product-image-wrap { border-radius: 12px; overflow: hidden; background: linear-gradient(180deg,#fff7f0,#fff2ec); display:flex; align-items:center; justify-content:center; }
+.product-stock { font-weight:700; font-size:0.75rem; padding:0.25rem 0.5rem; border-radius:8px; }
+
+/* Ensure the hero/poster is not overlapped by fixed header */
+.site-header-spacer { height: 72px; }
+
+@media (max-width: 640px) {
+  .form-input { padding: 0.6rem; }
+  body { font-size: 15px; }
+  .site-header-spacer { height: 64px; }
+}
+

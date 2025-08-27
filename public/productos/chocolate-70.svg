@@ -1,0 +1,40 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="chocolateGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3E2723;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#5D4037;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3E2723;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Fondo circular -->
+  <circle cx="150" cy="150" r="140" fill="url(#chocolateGradient)" stroke="url(#goldGradient)" stroke-width="3"/>
+  
+  <!-- Barra de chocolate principal -->
+  <rect x="80" y="100" width="140" height="100" rx="8" fill="#2E1A0E" stroke="#8B4513" stroke-width="2"/>
+  
+  <!-- Divisiones de la barra -->
+  <line x1="120" y1="100" x2="120" y2="200" stroke="#8B4513" stroke-width="1"/>
+  <line x1="160" y1="100" x2="160" y2="200" stroke="#8B4513" stroke-width="1"/>
+  <line x1="200" y1="100" x2="200" y2="200" stroke="#8B4513" stroke-width="1"/>
+  <line x1="80" y1="130" x2="220" y2="130" stroke="#8B4513" stroke-width="1"/>
+  <line x1="80" y1="160" x2="220" y2="160" stroke="#8B4513" stroke-width="1"/>
+  <line x1="80" y1="190" x2="220" y2="190" stroke="#8B4513" stroke-width="1"/>
+  
+  <!-- Texto 70% -->
+  <text x="150" y="180" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#FFD700">70%</text>
+  
+  <!-- Hojas de cacao decorativas -->
+  <ellipse cx="60" cy="80" rx="15" ry="8" fill="#228B22" opacity="0.8"/>
+  <ellipse cx="240" cy="80" rx="15" ry="8" fill="#228B22" opacity="0.8"/>
+  <ellipse cx="60" cy="220" rx="15" ry="8" fill="#228B22" opacity="0.8"/>
+  <ellipse cx="240" cy="220" rx="15" ry="8" fill="#228B22" opacity="0.8"/>
+  
+  <!-- Brillo en la barra -->
+  <rect x="85" y="105" width="130" height="20" rx="3" fill="#5D4037" opacity="0.6"/>
+</svg>
+

@@ -1,0 +1,48 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="chocolateGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3E2723;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#5D4037;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3E2723;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="almondGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DEB887;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#CD853F;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Fondo circular -->
+  <circle cx="150" cy="150" r="140" fill="url(#chocolateGradient2)" stroke="#8B4513" stroke-width="3"/>
+  
+  <!-- Barra de chocolate principal -->
+  <rect x="80" y="100" width="140" height="100" rx="8" fill="#2E1A0E" stroke="#8B4513" stroke-width="2"/>
+  
+  <!-- Divisiones de la barra -->
+  <line x1="120" y1="100" x2="120" y2="200" stroke="#8B4513" stroke-width="1"/>
+  <line x1="160" y1="100" x2="160" y2="200" stroke="#8B4513" stroke-width="1"/>
+  <line x1="200" y1="100" x2="200" y2="200" stroke="#8B4513" stroke-width="1"/>
+  <line x1="80" y1="130" x2="220" y2="130" stroke="#8B4513" stroke-width="1"/>
+  <line x1="80" y1="160" x2="220" y2="160" stroke="#8B4513" stroke-width="1"/>
+  <line x1="80" y1="190" x2="220" y2="190" stroke="#8B4513" stroke-width="1"/>
+  
+  <!-- Almendras en la barra -->
+  <ellipse cx="100" cy="120" rx="8" ry="4" fill="url(#almondGradient)" transform="rotate(45 100 120)"/>
+  <ellipse cx="140" cy="140" rx="6" ry="3" fill="url(#almondGradient)" transform="rotate(-30 140 140)"/>
+  <ellipse cx="180" cy="125" rx="7" ry="3.5" fill="url(#almondGradient)" transform="rotate(60 180 125)"/>
+  <ellipse cx="110" cy="170" rx="5" ry="2.5" fill="url(#almondGradient)" transform="rotate(-15 110 170)"/>
+  <ellipse cx="150" cy="185" rx="6" ry="3" fill="url(#almondGradient)" transform="rotate(75 150 185)"/>
+  <ellipse cx="190" cy="165" rx="4" ry="2" fill="url(#almondGradient)" transform="rotate(-45 190 165)"/>
+  
+  <!-- Texto "Almendras" -->
+  <text x="150" y="210" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#DEB887">ALMENDRAS</text>
+  
+  <!-- Almendras decorativas alrededor -->
+  <ellipse cx="50" cy="70" rx="12" ry="6" fill="url(#almondGradient)" transform="rotate(30 50 70)"/>
+  <ellipse cx="250" cy="70" rx="10" ry="5" fill="url(#almondGradient)" transform="rotate(-20 250 70)"/>
+  <ellipse cx="50" cy="230" rx="8" ry="4" fill="url(#almondGradient)" transform="rotate(60 50 230)"/>
+  <ellipse cx="250" cy="230" rx="11" ry="5.5" fill="url(#almondGradient)" transform="rotate(-40 250 230)"/>
+  
+  <!-- Brillo en la barra -->
+  <rect x="85" y="105" width="130" height="20" rx="3" fill="#5D4037" opacity="0.6"/>
+</svg>
+

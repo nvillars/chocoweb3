@@ -1,0 +1,44 @@
+{
+  "name": "chocoweb",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "eslint",
+    "db:check": "dotenv -e .env.local -- node -e \"require('mongoose').connect(process.env.MONGODB_URI).then(()=>console.log('ok')).catch(e=>console.error(e)).finally(()=>process.exit())\"",
+  "seed": "dotenv -e .env.local -- tsx scripts/seed.ts",
+  "seed-mongo": "dotenv -e .env.local -- node scripts/seed-mongo.js",
+  "smoke-test": "node --experimental-fetch scripts/smoke-test.js",
+  "clean": "if exist .next rmdir /s /q .next && if exist node_modules\\.cache rmdir /s /q node_modules\\.cache",
+  "smoke:orders": "dotenv -e .env.local -- tsx scripts/smoke-test.ts",
+    "test:webhook": "dotenv -e .env.local -- tsx scripts/test-webhook.ts",
+  "migrate:orders:dry": "dotenv -e .env.local -- node scripts/migrate-orders-cents-to-units.js",
+  "migrate:orders:apply": "dotenv -e .env.local -- node scripts/migrate-orders-cents-to-units.js --apply"
+  },
+  "tools": {
+    "generate-images": "node tools/generate-responsive-images.js"
+  },
+  "dependencies": {
+    "mongoose": "^7.5.0",
+    "next": "15.5.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+  "bcryptjs": "^2.4.3",
+    "zod": "^4.0.17"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv-cli": "^10.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.20.4",
+    "typescript": "^5"
+  }
+}
