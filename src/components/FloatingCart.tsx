@@ -14,6 +14,16 @@ export default function FloatingCart() {
   const toast = useToast();
   const { user } = useAuth();
   const router = useRouter();
+  // Listen for a global event so header can open the floating cart without shared state
+  React.useEffect(() => {
+    const onOpen = () => setIsOpen(true);
+    window.addEventListener('ladulcerina:openFloatingCart', onOpen as EventListener);
+    return () => window.removeEventListener('ladulcerina:openFloatingCart', onOpen as EventListener);
+  }, []);
+
+  // Show FloatingCart for anonymous (not logged) and for normal users.
+  // Hide only when logged-in role is present but not 'user' (e.g., admin).
+  if (user && user.role !== 'user') return null;
 
   const cartItemsList = getCartItems();
   const totalItems = getTotalItems();

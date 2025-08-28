@@ -116,15 +116,17 @@ export default function Header() {
             <button className="btn btn-ghost hidden md:inline-flex" aria-label="Ver catálogo" onClick={() => document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' })}>Ver catálogo</button>
           </div>
 
-          <div className="relative">
-            <Link href="/carrito" aria-label="Abrir carrito" className="inline-flex items-center gap-2 btn btn-primary">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
-                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-              </svg>
-              <span className="sr-only">Carrito</span>
-            </Link>
-            {badge > 0 && <span className="absolute -top-2 -right-2 badge bg-red-500 text-white" aria-hidden>{badge}</span>}
-          </div>
+          {user?.role === 'user' && (
+            <div className="relative">
+              <button aria-label="Abrir carrito" className="inline-flex items-center gap-2 btn btn-primary" onClick={() => window.dispatchEvent(new Event('ladulcerina:openFloatingCart'))}>
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
+                  <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+                </svg>
+                <span className="sr-only">Carrito</span>
+              </button>
+              {badge > 0 && <span className="absolute -top-2 -right-2 badge bg-red-500 text-white" aria-hidden>{badge}</span>}
+            </div>
+          )}
 
           <div className="md:hidden">
             <button aria-label="Abrir menú" aria-expanded={mobileOpen} aria-controls="mobile-menu" onClick={() => setMobileOpen(true)} className="p-2 rounded-md focus-visible:ring-4 focus-visible:ring-yellow-200 md:static z-50 bg-transparent">

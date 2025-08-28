@@ -2,20 +2,22 @@ import { NextResponse, NextRequest } from 'next/server';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import connectToDB from '../../../../lib/mongodb';
 import { getOrderModel } from '../../../../models/Order';
+import { getOrderTokenModel } from '../../../../models/OrderToken';
 
 export async function GET(req: NextRequest, context: any) {
   try {
     await connectToDB();
     const Order = getOrderModel();
-    // Normalize params which can be a Promise or an object in different Next versions
+    const OrderToken = getOrderTokenModel();
+    // Next.js requires awaiting context.params when it can be a Promise
     let id: string | undefined;
     const maybeParams = context?.params;
-    if (maybeParams && typeof maybeParams === 'object' && 'id' in (maybeParams as Record<string, unknown>)) {
-      const val = (maybeParams as Record<string, unknown>).id;
-      if (typeof val === 'string') id = val;
-    } else if (maybeParams && typeof (maybeParams as any).then === 'function') {
+    if (maybeParams && typeof (maybeParams as any).then === 'function') {
       const resolved = (await maybeParams) as Record<string, unknown>;
       if (resolved && typeof resolved.id === 'string') id = resolved.id;
+    } else if (maybeParams && typeof maybeParams === 'object' && 'id' in (maybeParams as Record<string, unknown>)) {
+      const val = (maybeParams as Record<string, unknown>).id;
+      if (typeof val === 'string') id = val;
     }
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
@@ -32,6 +34,27 @@ export async function GET(req: NextRequest, context: any) {
     if (!raw) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
   let session: { email?: string; role?: string } | null = null;
   try { session = JSON.parse(decodeURIComponent(raw)); } catch (e) { return NextResponse.json({ error: 'Invalid session' }, { status: 400 }); }
+
+    // allow access by token: ?token=xxx
+    const url = new URL(req.url);
+    const tokenQuery = url.searchParams.get('token');
+
+    // If token provided, validate it atomically and mark used in one step
+    if (tokenQuery) {
+      // find a token that matches, is not used and not expired, and mark it used atomically
+      const now = new Date();
+      const ot = await OrderToken.findOneAndUpdate(
+        { token: tokenQuery, orderId: id, used: false, expiresAt: { $gt: now } },
+        { $set: { used: true } },
+        { new: true }
+      ).exec();
+      if (!ot) {
+        // could be invalid, expired, already used, or not matching order
+        return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+      }
+      // ensure token references requested order (defensive)
+      if (String(ot.orderId) !== id) return NextResponse.json({ error: 'Token does not match order' }, { status: 403 });
+    }
 
     const order = await Order.findById(id).lean();
     if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 });
