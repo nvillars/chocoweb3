@@ -3,8 +3,11 @@ import crypto from 'crypto';
 import connectToDB from '../../../../../lib/mongodb';
 import { getOrderModel } from '../../../../../models/Order';
 import { getOrderTokenModel } from '../../../../../models/OrderToken';
+import { verifyToken } from '@/server/auth';
 
-export async function POST(req: NextRequest, context: any) {
+type RouteContext = { params?: Record<string, string> | Promise<Record<string, string>> };
+
+export async function POST(req: NextRequest, context: RouteContext) {
   try {
     await connectToDB();
     const Order = getOrderModel();
@@ -13,28 +16,28 @@ export async function POST(req: NextRequest, context: any) {
     // await params if needed
     let id: string | undefined;
     const maybeParams = context?.params;
-    if (maybeParams && typeof (maybeParams as any).then === 'function') {
-      const resolved = (await maybeParams) as Record<string, unknown>;
-      if (resolved && typeof resolved.id === 'string') id = resolved.id;
-    } else if (maybeParams && typeof maybeParams === 'object' && 'id' in (maybeParams as Record<string, unknown>)) {
-      const val = (maybeParams as Record<string, unknown>).id;
-      if (typeof val === 'string') id = val;
+    if (maybeParams) {
+      if (typeof (maybeParams as Promise<Record<string, string>>).then === 'function') {
+        const resolved = await (maybeParams as Promise<Record<string, string>>);
+        if (resolved && typeof resolved.id === 'string') id = resolved.id;
+      } else if (typeof maybeParams === 'object' && 'id' in maybeParams) {
+        const val = (maybeParams as Record<string, string>).id;
+        if (typeof val === 'string') id = val;
+      }
     }
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-    // parse cookie session
-    const cookieHeader = req.headers.get('cookie') || '';
-    const cookies = Object.fromEntries(
-      cookieHeader
-        .split(';')
-        .map((c) => c.split('='))
-        .map(([k = '', ...v]) => [k.trim(), v.join('=')])
-        .filter(([k]) => k)
-    );
-    const raw = cookies['ladulcerina_auth'];
-    if (!raw) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+    // verify secure session token
     let session: { email?: string; role?: string } | null = null;
-    try { session = JSON.parse(decodeURIComponent(raw)); } catch (e) { return NextResponse.json({ error: 'Invalid session' }, { status: 400 }); }
+    try {
+      const header = req.headers.get('cookie') || '';
+      const map = Object.fromEntries(header.split(';').map((c) => c.split('=').map(s => s.trim())).map(([k, ...v]) => [k, v.join('=')]));
+      const token = map[process.env.SESSION_COOKIE_NAME || 'ld_session'];
+      if (!token) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+      const payload = await verifyToken(token);
+      if (!payload) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+      session = { email: payload.email, role: payload.role };
+    } catch (e) { return NextResponse.json({ error: 'Invalid session' }, { status: 400 }); }
 
     const order = await Order.findById(id).lean();
     if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -43,19 +46,19 @@ export async function POST(req: NextRequest, context: any) {
     const sameUser = !!(session?.email && ord.user && (ord.user as { email?: string }).email === session.email);
     if (!isAdmin && !sameUser) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    // create secure token
-    const token = crypto.randomBytes(12).toString('base64url');
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
-    const doc = await OrderToken.create({ token, orderId: id, expiresAt, used: false });
+  // create secure token
+  const tokenValue = crypto.randomBytes(12).toString('base64url');
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+  const doc = await OrderToken.create({ token: tokenValue, orderId: id, expiresAt, used: false });
 
-    return NextResponse.json({ token: doc.token, expiresAt: doc.expiresAt });
+  return NextResponse.json({ token: doc.token, expiresAt: doc.expiresAt });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
-export async function GET(req: NextRequest, context: any) {
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
     await connectToDB();
     const Order = getOrderModel();
@@ -64,28 +67,28 @@ export async function GET(req: NextRequest, context: any) {
     // await params
     let id: string | undefined;
     const maybeParams = context?.params;
-    if (maybeParams && typeof (maybeParams as any).then === 'function') {
-      const resolved = (await maybeParams) as Record<string, unknown>;
-      if (resolved && typeof resolved.id === 'string') id = resolved.id;
-    } else if (maybeParams && typeof maybeParams === 'object' && 'id' in (maybeParams as Record<string, unknown>)) {
-      const val = (maybeParams as Record<string, unknown>).id;
-      if (typeof val === 'string') id = val;
+    if (maybeParams) {
+      if (typeof (maybeParams as Promise<Record<string, string>>).then === 'function') {
+        const resolved = await (maybeParams as Promise<Record<string, string>>);
+        if (resolved && typeof resolved.id === 'string') id = resolved.id;
+      } else if (typeof maybeParams === 'object' && 'id' in maybeParams) {
+        const val = (maybeParams as Record<string, string>).id;
+        if (typeof val === 'string') id = val;
+      }
     }
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-    // parse cookie session
-    const cookieHeader = req.headers.get('cookie') || '';
-    const cookies = Object.fromEntries(
-      cookieHeader
-        .split(';')
-        .map((c) => c.split('='))
-        .map(([k = '', ...v]) => [k.trim(), v.join('=')])
-        .filter(([k]) => k)
-    );
-    const raw = cookies['ladulcerina_auth'];
-    if (!raw) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+    // verify secure session token
     let session: { email?: string; role?: string } | null = null;
-    try { session = JSON.parse(decodeURIComponent(raw)); } catch (e) { return NextResponse.json({ error: 'Invalid session' }, { status: 400 }); }
+    try {
+      const header = req.headers.get('cookie') || '';
+      const map = Object.fromEntries(header.split(';').map((c) => c.split('=').map(s => s.trim())).map(([k, ...v]) => [k, v.join('=')]));
+      const token = map[process.env.SESSION_COOKIE_NAME || 'ld_session'];
+      if (!token) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+      const payload = await verifyToken(token);
+      if (!payload) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+      session = { email: payload.email, role: payload.role };
+    } catch (e) { return NextResponse.json({ error: 'Invalid session' }, { status: 400 }); }
 
     const order = await Order.findById(id).lean();
     if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -102,7 +105,7 @@ export async function GET(req: NextRequest, context: any) {
   }
 }
 
-export async function DELETE(req: NextRequest, context: any) {
+export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
     await connectToDB();
     const Order = getOrderModel();
@@ -111,12 +114,14 @@ export async function DELETE(req: NextRequest, context: any) {
     // params
     let id: string | undefined;
     const maybeParams = context?.params;
-    if (maybeParams && typeof (maybeParams as any).then === 'function') {
-      const resolved = (await maybeParams) as Record<string, unknown>;
-      if (resolved && typeof resolved.id === 'string') id = resolved.id;
-    } else if (maybeParams && typeof maybeParams === 'object' && 'id' in (maybeParams as Record<string, unknown>)) {
-      const val = (maybeParams as Record<string, unknown>).id;
-      if (typeof val === 'string') id = val;
+    if (maybeParams) {
+      if (typeof (maybeParams as Promise<Record<string, string>>).then === 'function') {
+        const resolved = await (maybeParams as Promise<Record<string, string>>);
+        if (resolved && typeof resolved.id === 'string') id = resolved.id;
+      } else if (typeof maybeParams === 'object' && 'id' in maybeParams) {
+        const val = (maybeParams as Record<string, string>).id;
+        if (typeof val === 'string') id = val;
+      }
     }
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
@@ -125,19 +130,17 @@ export async function DELETE(req: NextRequest, context: any) {
     const tokenQuery = url.searchParams.get('token');
     if (!tokenQuery) return NextResponse.json({ error: 'Missing token query' }, { status: 400 });
 
-    // parse cookie session
-    const cookieHeader = req.headers.get('cookie') || '';
-    const cookies = Object.fromEntries(
-      cookieHeader
-        .split(';')
-        .map((c) => c.split('='))
-        .map(([k = '', ...v]) => [k.trim(), v.join('=')])
-        .filter(([k]) => k)
-    );
-    const raw = cookies['ladulcerina_auth'];
-    if (!raw) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+    // verify secure session token
     let session: { email?: string; role?: string } | null = null;
-    try { session = JSON.parse(decodeURIComponent(raw)); } catch (e) { return NextResponse.json({ error: 'Invalid session' }, { status: 400 }); }
+    try {
+      const header = req.headers.get('cookie') || '';
+      const map = Object.fromEntries(header.split(';').map((c) => c.split('=').map(s => s.trim())).map(([k, ...v]) => [k, v.join('=')]));
+      const token = map[process.env.SESSION_COOKIE_NAME || 'ld_session'];
+      if (!token) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+      const payload = await verifyToken(token);
+      if (!payload) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+      session = { email: payload.email, role: payload.role };
+    } catch (e) { return NextResponse.json({ error: 'Invalid session' }, { status: 400 }); }
 
     const order = await Order.findById(id).lean();
     if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -146,7 +149,7 @@ export async function DELETE(req: NextRequest, context: any) {
     const sameUser = !!(session?.email && ord.user && (ord.user as { email?: string }).email === session.email);
     if (!isAdmin && !sameUser) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const res = await OrderToken.updateOne({ token: tokenQuery, orderId: id }, { $set: { used: true } }).exec();
+  const res = await OrderToken.updateOne({ token: tokenQuery, orderId: id }, { $set: { used: true } }).exec();
     if (res.matchedCount === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {

@@ -36,6 +36,13 @@ export default function MisPedidosPage() {
       try {
         const res = await fetch('/api/orders', { credentials: 'same-origin' });
         if (!res.ok) {
+          if (res.status === 401) {
+            // no server session
+            setError('Unauthenticated');
+            setOrders(null);
+            setLoading(false);
+            return;
+          }
           const body = await res.json().catch(() => ({}));
           throw new Error(body?.error || `HTTP ${res.status}`);
         }

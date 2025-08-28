@@ -33,8 +33,18 @@ export default function LoginForm() {
           return;
         }
         const user = await res.json();
-        login(user.email, user.role || 'user');
-        window.location.href = '/';
+        // Wait for auth context to set session (server sets cookie on /api/auth/login)
+        try {
+          const ok = await login(user.email, user.role || 'user');
+          if (ok) {
+            window.location.href = '/';
+            return;
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          toast.push({ message: msg });
+          return;
+        }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         toast.push({ message: msg });
@@ -59,16 +69,30 @@ export default function LoginForm() {
         const r2 = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: regEmail.trim(), password }) });
         if (r2.ok) {
           const u = await r2.json();
-          login(u.email, u.role || 'user');
+          try {
+            const ok = await login(u.email, u.role || 'user');
+            if (ok) {
+              toast.push({ message: 'Cuenta creada y sesión iniciada' });
+              window.location.href = '/';
+              return;
+            }
+          } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            toast.push({ message: msg });
+            return;
+          }
+        }
+      } catch (e) {}
+      const createdObj = created as { email?: string; role?: string } | undefined;
+      try {
+        const ok = await login(createdObj?.email || regEmail.trim(), createdObj?.role || 'user');
+        if (ok) {
           toast.push({ message: 'Cuenta creada y sesión iniciada' });
           window.location.href = '/';
           return;
         }
-      } catch (e) {}
-  const createdObj = created as { email?: string; role?: string } | undefined;
-  login(createdObj?.email || regEmail.trim(), createdObj?.role || 'user');
-      toast.push({ message: 'Cuenta creada y sesión iniciada' });
-      window.location.href = '/';
+      } catch {}
+      toast.push({ message: 'Cuenta creada pero no fue posible iniciar sesión automáticamente' });
     } catch (err) {
       setRegError('Error al crear la cuenta');
     }

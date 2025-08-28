@@ -103,7 +103,17 @@ export default function Header() {
           <nav className="hidden md:flex items-center gap-4 ml-6" aria-label="Navegación principal">
             <Link href="/" className="text-sm hover:underline focus-visible:ring-4 focus-visible:ring-yellow-200">Inicio</Link>
             <Link href="/productos" className="text-sm hover:underline focus-visible:ring-4 focus-visible:ring-yellow-200">Productos</Link>
-            <Link href="/mis-pedidos" className="text-sm hover:underline focus-visible:ring-4 focus-visible:ring-yellow-200">Mis pedidos</Link>
+            {user === undefined ? (
+              <span className="text-sm text-gray-500">Mis pedidos</span>
+            ) : user ? (
+              user.role === 'admin' ? (
+                <Link href="/admin/orders" className="text-sm hover:underline focus-visible:ring-4 focus-visible:ring-yellow-200">Mis pedidos</Link>
+              ) : (
+                <Link href="/mis-pedidos" className="text-sm hover:underline focus-visible:ring-4 focus-visible:ring-yellow-200">Mis pedidos</Link>
+              )
+            ) : (
+              <Link href="/login" className="text-sm hover:underline focus-visible:ring-4 focus-visible:ring-yellow-200">Mis pedidos</Link>
+            )}
             {user?.role === 'admin' && (
               <Link href="/admin" className="text-sm hover:underline focus-visible:ring-4 focus-visible:ring-yellow-200">Admin</Link>
             )}
@@ -157,7 +167,13 @@ export default function Header() {
             <ul className="space-y-3">
               <li><Link href="/" ref={firstLinkRef} onClick={() => setMobileOpen(false)} className="block text-lg">Inicio</Link></li>
               <li><Link href="/productos" onClick={() => setMobileOpen(false)} className="block text-lg">Productos</Link></li>
-              <li><Link href="/mis-pedidos" onClick={() => setMobileOpen(false)} className="block text-lg">Mis pedidos</Link></li>
+              <li>{user ? (user.role === 'admin' ? (
+                <Link href="/admin/orders" onClick={() => setMobileOpen(false)} className="block text-lg">Mis pedidos</Link>
+              ) : (
+                <Link href="/mis-pedidos" onClick={() => setMobileOpen(false)} className="block text-lg">Mis pedidos</Link>
+              )) : (
+                <Link href="/login" onClick={() => setMobileOpen(false)} className="block text-lg">Mis pedidos</Link>
+              )}</li>
               {user?.role === 'admin' && (
                 <li><Link href="/admin" onClick={() => setMobileOpen(false)} className="block text-lg">Admin</Link></li>
               )}

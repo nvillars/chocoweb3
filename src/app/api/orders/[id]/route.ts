@@ -3,6 +3,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import connectToDB from '../../../../lib/mongodb';
 import { getOrderModel } from '../../../../models/Order';
 import { getOrderTokenModel } from '../../../../models/OrderToken';
+import { verifyToken } from '@/server/auth';
 
 export async function GET(req: NextRequest, context: any) {
   try {
@@ -12,8 +13,8 @@ export async function GET(req: NextRequest, context: any) {
     // Next.js requires awaiting context.params when it can be a Promise
     let id: string | undefined;
     const maybeParams = context?.params;
-    if (maybeParams && typeof (maybeParams as any).then === 'function') {
-      const resolved = (await maybeParams) as Record<string, unknown>;
+    if (maybeParams && typeof (maybeParams as unknown as PromiseLike<Record<string, unknown>>).then === 'function') {
+      const resolved = await (maybeParams as unknown as PromiseLike<Record<string, unknown>>);
       if (resolved && typeof resolved.id === 'string') id = resolved.id;
     } else if (maybeParams && typeof maybeParams === 'object' && 'id' in (maybeParams as Record<string, unknown>)) {
       const val = (maybeParams as Record<string, unknown>).id;
@@ -21,19 +22,17 @@ export async function GET(req: NextRequest, context: any) {
     }
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-    // parse cookie like other endpoints: demo session ladulcerina_auth
-    const cookieHeader = req.headers.get('cookie') || '';
-    const cookies = Object.fromEntries(
-      cookieHeader
-        .split(';')
-        .map((c) => c.split('='))
-        .map(([k = '', ...v]) => [k.trim(), v.join('=')])
-        .filter(([k]) => k)
-    );
-    const raw = cookies['ladulcerina_auth'];
-    if (!raw) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
-  let session: { email?: string; role?: string } | null = null;
-  try { session = JSON.parse(decodeURIComponent(raw)); } catch (e) { return NextResponse.json({ error: 'Invalid session' }, { status: 400 }); }
+    // Verify secure session token from HttpOnly cookie
+    let session: { email?: string; role?: string } | null = null;
+    try {
+      const header = req.headers.get('cookie') || '';
+      const map = Object.fromEntries(header.split(';').map((c) => c.split('=').map(s => s.trim())).map(([k, ...v]) => [k, v.join('=')]));
+      const token = map[process.env.SESSION_COOKIE_NAME || 'ld_session'];
+      if (!token) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+  const payload = await verifyToken(token);
+      if (!payload) return NextResponse.json({ error: 'Invalid session' }, { status: 400 });
+      session = { email: payload.email, role: payload.role };
+    } catch (e) { return NextResponse.json({ error: 'Invalid session' }, { status: 400 }); }
 
     // allow access by token: ?token=xxx
     const url = new URL(req.url);

@@ -5,30 +5,27 @@ import { createOrder } from '../../../server/repositories/orders';
 import { publish } from '../../../lib/events';
 import connectToDB from '../../../lib/mongodb';
 import { getOrderModel } from '../../../models/Order';
+import { verifyToken } from '@/server/auth';
 
 export async function GET(req: Request) {
   try {
     await connectToDB();
     const Order = getOrderModel();
 
-    // Read demo session cookie set by the client: ladulcerina_auth
-    const cookieHeader = req.headers.get('cookie') || '';
-    const cookies = Object.fromEntries(
-      cookieHeader
-        .split(';')
-        .map((c) => c.split('='))
-        .map(([k = '', ...v]) => [k.trim(), v.join('=')])
-        .filter(([k]) => k)
-    );
-
-    const raw = cookies['ladulcerina_auth'];
-    if (!raw) {
-      return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
-    }
-
+    // Verify secure session token from HttpOnly cookie
     let session: { email?: string; role?: string } | null = null;
     try {
-      session = JSON.parse(decodeURIComponent(raw));
+      const token = (() => {
+        try {
+          const header = req.headers.get('cookie') || '';
+          const map = Object.fromEntries(header.split(';').map((c) => c.split('=').map(s => s.trim())).map(([k, ...v]) => [k, v.join('=')]));
+          return map[process.env.SESSION_COOKIE_NAME || 'ld_session'];
+        } catch { return undefined; }
+      })();
+      if (!token) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+  const payload = await verifyToken(token);
+  if (!payload) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+  session = { email: payload.email, role: payload.role };
     } catch (e) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 400 });
     }
@@ -53,36 +50,26 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     await connectToDB();
-    const idempotencyKey = req.headers.get('Idempotency-Key') || undefined;
+  const idempotencyKey = req.headers.get('Idempotency-Key') || undefined;
     const body = await req.json().catch(() => null);
     // If client has a demo session cookie, prefer that email as the order owner
     try {
-      const cookieHeader = (req.headers.get && req.headers.get('cookie')) || '';
-      const cookies = Object.fromEntries(
-        (cookieHeader
-          .split(';')
-          .map((c: string) => c.split('=').map(s => s.trim()))
-          .map(arr => [arr[0] || '', arr.slice(1).join('=')])
-          .filter(([k]) => !!k) as [string, string][]
-        )
-      );
-      const raw = cookies['ladulcerina_auth'];
-      if (raw) {
-        try {
-          const session = JSON.parse(decodeURIComponent(raw)) as { email?: string; name?: string } | null;
-          if (session?.email) {
-            // ensure body exists and set/override user.email
+      try {
+        const header = (req.headers.get && req.headers.get('cookie')) || '';
+        const map = Object.fromEntries((header || '').split(';').map((c: string) => c.split('=').map(s => s.trim())).map(arr => [arr[0] || '', arr.slice(1).join('=')]).filter(([k]) => !!k) as [string, string][]);
+        const token = map[process.env.SESSION_COOKIE_NAME || 'ld_session'];
+        if (token) {
+          const payload = await verifyToken(token);
+          if (payload?.email) {
             const b = (body && typeof body === 'object') ? body as Record<string, unknown> : {};
             const incomingUser = (b.user && typeof b.user === 'object') ? (b.user as Record<string, unknown>) : {};
-            incomingUser.email = session.email;
-            if (session.name && !incomingUser.name) incomingUser.name = session.name;
+            incomingUser.email = payload.email;
+            if (payload.email && !incomingUser.name) incomingUser.name = payload.email.split('@')[0];
             b.user = incomingUser;
-            // replace body reference used below
-            // Note: createOrder will re-parse/validate input
             Object.assign(body || {}, b);
           }
-        } catch (e) { /* ignore session parse errors */ }
-      }
+        }
+      } catch (e) { /* ignore cookie parse errors */ }
     } catch (e) { /* ignore cookie parse errors */ }
   const created = await createOrder(body, { idempotencyKey }) as { order?: unknown; updatedProducts?: unknown[] } | unknown;
   // created may be an object { order, updatedProducts } or just the order
