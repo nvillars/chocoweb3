@@ -20,6 +20,8 @@ const OrderSchema = new Schema({
   payment: {
     method: { type: String, enum: ['stripe','yape','plin','transfer','cod'], required: true },
     providerId: { type: String },
+  approvedBy: { type: String },
+  approvedAt: { type: Date },
     status: { type: String, enum: ['requires_payment','succeeded','failed'], default: 'requires_payment' }
   },
   status: { type: String, enum: ['pending','paid','cancelled','failed'], default: 'pending' },

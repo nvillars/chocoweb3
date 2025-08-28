@@ -1,12 +1,14 @@
 import React from 'react';
+import Link from 'next/link';
 import connectToDB from '@/lib/mongodb';
 import { getOrderModel } from '@/models/Order';
+import AdminOrderActions from '@/components/AdminOrderActions';
 
 type OrderView = {
   _id: string;
   user?: { name?: string; email?: string };
   amounts?: { total?: number };
-  payment?: { method?: string };
+  payment?: { method?: string; status?: string; providerId?: string; approvedBy?: string; approvedAt?: string };
   status?: string;
 };
 
@@ -22,15 +24,15 @@ export default async function OrdersPage(){
           const total = Number(o?.amounts?.total ?? 0);
           const paymentMethod = o?.payment?.method ?? '—';
           return (
-            <li key={String(o._id)} className="p-2 border-b flex justify-between">
+            <li key={String(o._id)} className="p-2 border-b flex justify-between items-center">
               <div>
                 <div><strong>{o.user?.name || 'Anon'}</strong> - {o.status}</div>
-                <div>S/ {total.toFixed(2)} - {paymentMethod}</div>
+                <div className="text-sm text-gray-600">S/ {total.toFixed(2)} - {paymentMethod}</div>
+                <div className="text-sm text-gray-500">Pago: {o.payment?.status ?? '—'} {o.payment?.providerId ? `· Ref: ${o.payment?.providerId}` : ''}</div>
               </div>
-              <div className="flex gap-2">
-                <form method="post" action={`/api/orders/${o._id}/pay`}>
-                  <button type="submit" className="bg-green-500 text-white px-2 py-1 rounded">Marcar pagada</button>
-                </form>
+              <div className="flex gap-2 items-center">
+                <AdminOrderActions id={String(o._id)} initialStatus={o.status} initialPaymentStatus={o.payment?.status} initialProviderId={o.payment?.providerId} initialApprovedBy={o.payment?.approvedBy} initialApprovedAt={o.payment?.approvedAt as unknown as string} />
+                <Link href={`/orders/${String(o._id)}`} aria-label={`Ver detalle de orden ${String(o._id)}`} className="bg-blue-600 text-white px-2 py-1 rounded">Detalle</Link>
                 <form method="post" action={`/api/orders/${o._id}/cancel`}>
                   <button type="submit" className="bg-red-500 text-white px-2 py-1 rounded">Cancelar</button>
                 </form>

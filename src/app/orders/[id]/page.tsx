@@ -3,13 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
+import AdminOrderActions from '../../../components/AdminOrderActions';
 
 export default function OrderDetailPage() {
   const params = useParams();
   const id = params?.id as string | undefined;
   const { user } = useAuth();
   type OrderItem = { name?: string; qty?: number; unitPrice?: number; lineTotal?: number };
-  type OrderView = { _id?: string; createdAt?: string; status?: string; payment?: { method?: string; status?: string }; amounts?: { subtotal?: number; shipping?: number; tax?: number; total?: number }; items?: OrderItem[] } | null;
+  type OrderView = { _id?: string; createdAt?: string; status?: string; payment?: { method?: string; status?: string; providerId?: string; approvedBy?: string; approvedAt?: string }; amounts?: { subtotal?: number; shipping?: number; tax?: number; total?: number }; items?: OrderItem[] } | null;
   const [order, setOrder] = useState<OrderView>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,11 +58,23 @@ export default function OrderDetailPage() {
           <div className="text-right">
             <div className="font-semibold">Estado: {order.status}</div>
             <div className="text-sm text-gray-600">Pago: {order.payment?.method} {order.payment?.status ? `· ${order.payment.status}` : ''}</div>
+            <div className="text-sm text-gray-500">Referencia: {order.payment?.providerId ?? '—'}</div>
+            {order.payment?.approvedBy && <div className="text-sm text-gray-500">Aprobado por: {order.payment?.approvedBy}{order.payment?.approvedAt ? ` · ${new Date(order.payment?.approvedAt as unknown as string).toLocaleString()}` : ''}</div>}
             <div className="text-lg font-bold">S/ {(order.amounts?.total ?? 0).toFixed(2)}</div>
-          </div>
-        </div>
+              </div>
+            </div>
 
-        <div className="divide-y">
+            {/* Admin actions */}
+            {user && user.role === 'admin' && (
+              <div className="mt-4 flex justify-end gap-2">
+                <AdminOrderActions id={String(order._id)} initialStatus={order.status} initialPaymentStatus={order.payment?.status} initialProviderId={order.payment?.providerId} initialApprovedBy={order.payment?.approvedBy} initialApprovedAt={order.payment?.approvedAt as unknown as string} />
+                <form method="post" action={`/api/orders/${order._id}/cancel`}>
+                  <button type="submit" className="bg-red-500 text-white px-3 py-2 rounded">Cancelar</button>
+                </form>
+              </div>
+            )}
+
+            <div className="divide-y">
       {((order.items || []) as OrderItem[]).map((it, idx) => (
             <div key={idx} className="py-4 flex items-center justify-between">
               <div>
