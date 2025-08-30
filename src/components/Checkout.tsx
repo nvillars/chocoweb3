@@ -42,7 +42,7 @@ export default function Checkout() {
     };
     const idKey = generateIdKey();
     try {
-      const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': idKey }, body: JSON.stringify({ user: { name: formData.nombre, email: formData.email }, items, paymentMethod: 'cod' }) });
+  const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': idKey }, body: JSON.stringify({ user: { name: formData.nombre, email: formData.email }, items, paymentMethod: 'card' }) });
       if (res.status === 201) {
         const data = await res.json().catch(()=>({}));
   const ord = (data?.order || data) as OrderSummary | undefined;

@@ -18,13 +18,13 @@ const OrderSchema = new Schema({
   total: { type: Number, required: true }
   },
   payment: {
-    method: { type: String, enum: ['stripe','yape','plin','transfer','cod'], required: true },
+    method: { type: String, enum: ['stripe','yape','plin','transfer'], required: true },
     providerId: { type: String },
   approvedBy: { type: String },
   approvedAt: { type: Date },
-    status: { type: String, enum: ['requires_payment','succeeded','failed'], default: 'requires_payment' }
+    status: { type: String, enum: ['succeeded','failed'] }
   },
-  status: { type: String, enum: ['pending','paid','cancelled','failed'], default: 'pending' },
+  status: { type: String, enum: ['paid','cancelled','failed'] },
   user: {
     email: { type: String },
     name: { type: String }

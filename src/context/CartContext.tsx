@@ -91,7 +91,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   async function placeOrder(opts?: { paymentMethod?: string; user?: User | null }) {
     const items = getCartItems().map(it => ({ productId: it.id, qty: it.quantity }));
     const idKey = (typeof crypto !== 'undefined' && typeof (crypto as unknown as { randomUUID?: () => string }).randomUUID === 'function') ? (crypto as unknown as { randomUUID: () => string }).randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
-    const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': idKey }, body: JSON.stringify({ items, paymentMethod: opts?.paymentMethod || 'cod', user: opts?.user }) });
+  const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': idKey }, body: JSON.stringify({ items, paymentMethod: opts?.paymentMethod || 'card', user: opts?.user }) });
     if (res.status === 201) return res.json();
     if (res.status === 409) {
       const err = await res.json();

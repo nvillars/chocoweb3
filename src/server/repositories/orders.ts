@@ -14,7 +14,7 @@ const CreateOrderSchema = z.object({
   userId: z.string().optional(),
   user: z.object({ email: z.string().optional(), name: z.string().optional() }).optional(),
   items: z.array(z.object({ productId: z.string(), qty: z.number().int().min(1) })),
-  paymentMethod: z.enum(['stripe','yape','plin','transfer','cod']).optional()
+  paymentMethod: z.enum(['stripe','yape','plin','transfer']).optional()
 });
 
 export async function createOrder(input: unknown, opts?: { idempotencyKey?: string }) {
@@ -65,7 +65,7 @@ export async function createOrder(input: unknown, opts?: { idempotencyKey?: stri
     const orderPayload: Record<string, unknown> = {
       items: itemsSnapshot,
       amounts,
-      payment: { method: parsed.paymentMethod || 'cod', status: 'requires_payment' },
+  payment: { method: parsed.paymentMethod || 'transfer', status: 'requires_payment' },
       status: 'pending',
       user: parsed.user || {},
     };
@@ -117,7 +117,7 @@ export async function createOrder(input: unknown, opts?: { idempotencyKey?: stri
           const orderPayload: Record<string, unknown> = {
             items: itemsSnapshot,
             amounts,
-            payment: { method: parsed.paymentMethod || 'cod', status: 'requires_payment' },
+            payment: { method: parsed.paymentMethod || 'transfer', status: 'requires_payment' },
             status: 'pending',
             user: parsed.user || {},
           };

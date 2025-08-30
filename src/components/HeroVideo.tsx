@@ -11,8 +11,10 @@ import { useCart } from "../context/CartContext";
 import { useRouter } from "next/navigation";
 import styles from "./HeroVideo.module.css";
 
+// Use the actual video files present in public/videos for sequential playback.
+// If you later add the canonical hero files, update these arrays.
 const desktopPlaylist = ["/videos/video1.mp4", "/videos/video2.mp4"];
-const mobilePlaylist = ["/videos/video1.mp4", "/videos/video2.mp4"];
+const mobilePlaylist = ["/videos/video2.mp4", "/videos/video1.mp4"];
 
 export default function HeroVideo(): React.ReactElement {
   // two layered video elements to enable smooth crossfade transitions
@@ -60,6 +62,42 @@ export default function HeroVideo(): React.ReactElement {
     }
   }
 
+  // Cache for HEAD existence checks to avoid repeated 404s for missing files
+  const existenceCacheRef = useRef<Record<string, boolean>>({});
+
+  // Check a URL exists using HEAD. Returns true if status in 200-299. Uses cache.
+  async function urlExists(url: string) {
+    const cache = existenceCacheRef.current;
+    if (cache[url] !== undefined) return cache[url];
+    try {
+      const r = await fetch(url, { method: 'HEAD' });
+      cache[url] = !!r.ok;
+      return cache[url];
+    } catch (e) {
+      cache[url] = false;
+      return false;
+    }
+  }
+
+  // Given the playlist and a starting index, find the first available source.
+  // For each candidate we prefer its .webm alternative if present, otherwise its mp4.
+  async function chooseSourceFromPlaylist(playlist: string[], startIndex = 0) {
+    if (!Array.isArray(playlist) || playlist.length === 0) return null;
+    const len = playlist.length;
+    for (let offset = 0; offset < len; offset++) {
+      const i = (startIndex + offset) % len;
+      const candidate = playlist[i];
+      if (!candidate) continue;
+      // check mp4 exists
+      if (await urlExists(candidate)) return candidate;
+      // check webm alternative
+      const webm = candidate.replace(/\.mp4$/i, '.webm');
+      if (await urlExists(webm)) return webm;
+      // otherwise continue to next candidate
+    }
+    return null;
+  }
+
   // Play the video at playlist index i
   // playIndex now loads the next clip into the background layer, crossfades,
   // and preloads the following clip. This avoids showing an empty frame between clips.
@@ -70,7 +108,12 @@ export default function HeroVideo(): React.ReactElement {
 
     setShowPlayButton(false);
 
-    const src = await pickSource(currentPlaylist[i]);
+    const src = await chooseSourceFromPlaylist(currentPlaylist, i);
+    if (!src) {
+      // nothing available in playlist — show play button so user can try manual control
+      setShowPlayButton(true);
+      return;
+    }
 
     // load the new clip into the back layer so we can crossfade to it
     back.src = src;
@@ -113,13 +156,15 @@ export default function HeroVideo(): React.ReactElement {
       videoRefBack.current = tmp;
     }, 800); // slightly longer than transition to ensure visual stability
 
-    // preload next clip lightly off-DOM
+    // preload next clip lightly off-DOM using playlist-aware chooser
     const nextIndex = (i + 1) % currentPlaylist.length;
-    const nextSrc = await pickSource(currentPlaylist[nextIndex]);
+    const nextSrc = await chooseSourceFromPlaylist(currentPlaylist, nextIndex);
     try {
-      const pre = document.createElement("video");
-      pre.preload = "metadata";
-      pre.src = nextSrc;
+      if (nextSrc) {
+        const pre = document.createElement("video");
+        pre.preload = "metadata";
+        pre.src = nextSrc;
+      }
     } catch (e) {
       // noop
     }
@@ -197,11 +242,12 @@ export default function HeroVideo(): React.ReactElement {
         const v = videoRef.current;
         if (v && !reducedMotion) {
           // fire and forget
-          pickSource((nowMobile ? mobilePlaylist : desktopPlaylist)[0]).then((s) => {
+          chooseSourceFromPlaylist(nowMobile ? mobilePlaylist : desktopPlaylist, 0).then((s) => {
+            if (!s) return setShowPlayButton(true);
             v.src = s;
             v.load();
             v.play().catch(() => setShowPlayButton(true));
-          }).catch(() => {});
+          }).catch(() => setShowPlayButton(true));
         }
       }
     }
@@ -302,10 +348,10 @@ export default function HeroVideo(): React.ReactElement {
     // try to set initial src preferring webm when available
     const init = async () => {
       try {
-        const first = (isMobile ? mobilePlaylist : desktopPlaylist)[0];
-        const s = await pickSource(first);
+        const list = isMobile ? mobilePlaylist : desktopPlaylist;
+        const s = await chooseSourceFromPlaylist(list, 0);
         const v = videoRef.current;
-        if (v) {
+        if (v && s) {
           v.src = s;
           // load but don't force play here; playIndex or intersection observer will handle playback
           v.load();
@@ -324,7 +370,24 @@ export default function HeroVideo(): React.ReactElement {
   function handleManualPlay() {
     const v = videoRef.current;
     if (!v) return;
-    v.play().then(() => setShowPlayButton(false)).catch(() => setShowPlayButton(true));
+    // ensure the visible layer has a src and is ready to play
+    (async () => {
+      try {
+        if (!v.src) {
+          const s = await chooseSourceFromPlaylist(currentPlaylist, index);
+          if (!s) return setShowPlayButton(true);
+          v.src = s;
+          v.load();
+        }
+        // ensure muted so browsers allow autoplay/play gestures
+        v.muted = true;
+        const p = v.play();
+        if (p && typeof p.then === 'function') await p;
+        setShowPlayButton(false);
+      } catch (e) {
+        setShowPlayButton(true);
+      }
+    })();
   }
 
   return (
@@ -359,16 +422,19 @@ export default function HeroVideo(): React.ReactElement {
       />
 
       <div className={styles.hero__overlay}>
-        <div>
-          <h1>Chocolate artesanal hecho a mano</h1>
+        <div className="max-w-3xl">
+          <h1 className="text-4xl md:text-6xl font-serif text-[var(--brand-700)] leading-tight">Chocolate artesanal hecho a mano</h1>
+          <p className="mt-3 text-lg text-[var(--fg)] max-w-2xl">Selección de tabletas y bombones hechos con cacao fino, pequeños lotes y envíos a todo el país.</p>
           {/* Show CTA only when not admin. If no user (guest) show it; if user.role === 'user' show it; hide for admin */}
-          <CTA />
+          <div className="mt-6">
+            <CTA />
+          </div>
         </div>
       </div>
 
       {showPlayButton && (
         <div className={styles.hero__playButtonWrap}>
-          <button className={styles.hero__playButton} onClick={handleManualPlay} aria-label="Reproducir video">
+          <button type="button" className={styles.hero__playButton} onClick={handleManualPlay} aria-label="Reproducir video">
             Reproducir
           </button>
         </div>
@@ -404,6 +470,6 @@ export default function HeroVideo(): React.ReactElement {
     };
 
     return (
-      <a href="#" onClick={handleClick} className={styles.hero__cta}>Compra ahora</a>
+      <a href="#" onClick={handleClick} className="inline-flex items-center gap-3 btn btn-primary rounded-2xl px-5 py-3 text-lg">Comprar ahora</a>
     );
   }

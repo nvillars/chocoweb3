@@ -5,7 +5,8 @@ type GlobalCache = { mongooseClient?: mongoose.Connection | mongoose.Mongoose } 
 const g = globalThis as GlobalCache;
 
 export async function connectToDB() {
-  const uri = process.env.MONGODB_URI;
+  //const uri = process.env.MONGODB_URI;
+  const uri = process.env.MONGODB_URI ?? process.env.MONGODB_URI_LOCAL!;
   if (!uri) throw new Error('MONGODB_URI is not defined');
 
   if (g.mongooseClient) return g.mongooseClient;

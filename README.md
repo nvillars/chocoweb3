@@ -88,3 +88,31 @@ stripe trigger payment_intent.succeeded
 
 Note: the webhook handler persists processed Stripe event ids to avoid double-processing (`ProcessedWebhook` model). If you replay events, only the first delivery will be applied.
 
+## Operación — índices MongoDB recomendados
+
+Para producción/staging se recomienda crear los índices siguientes en la base de datos para rendimiento e idempotencia:
+
+1. Orders: asegurar idempotencia por `metadata.idempotencyKey` (unique)
+
+```js
+db.orders.createIndex({ 'metadata.idempotencyKey': 1 }, { unique: true, sparse: true });
+```
+
+2. OrderTokens: índice por token (único) y TTL en expiresAt
+
+```js
+db.ordertokens.createIndex({ token: 1 }, { unique: true });
+db.ordertokens.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+```
+
+3. Products: índices para slug, published y stock
+
+```js
+db.products.createIndex({ slug: 1 });
+db.products.createIndex({ published: 1 });
+db.products.createIndex({ stock: 1 });
+```
+
+Ejecuta estos comandos en un shell mongo o desde tu herramienta de administración (MongoDB Atlas/Compass). Asegúrate de que la colección `orders` no tenga `metadata.idempotencyKey` duplicados antes de crear el índice único.
+
+
